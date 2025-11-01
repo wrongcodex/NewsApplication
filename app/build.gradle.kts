@@ -76,7 +76,11 @@ dependencies {
 
     //Coil
     implementation(libs.coil)
-
+    //okHttp
     implementation(libs.okHttp)
     implementation(libs.logging.interseptor)
+
+    // Room
+    implementation(libs.room.runtime)
+    ksp(libs.room.compiler)
 }

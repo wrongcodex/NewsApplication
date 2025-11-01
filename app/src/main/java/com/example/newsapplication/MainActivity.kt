@@ -17,18 +17,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
+import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -44,15 +45,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.ImageLoader
 import coil.compose.AsyncImage
+import coil.memory.MemoryCache
+import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.example.newsapplication.core.apis.newsApi.NetworkResponse
 import com.example.newsapplication.core.models.newsModel.Article
+import com.example.newsapplication.core.viewmodels.DbViewModel
 import com.example.newsapplication.core.viewmodels.NewsViewModel
 import com.example.newsapplication.ui.theme.NewsApplicationTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -61,6 +67,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     //lateinit var viewModel: NewsViewModel
     private val viewModel by viewModels<NewsViewModel>()
+    private val dbViewModel by viewModels<DbViewModel>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -68,7 +75,7 @@ class MainActivity : ComponentActivity() {
             //val viewModel: NewsViewModel
             NewsApplicationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Screen(viewModel,innerPadding)
+                    Screen(viewModel,innerPadding, dbViewModel)
                 }
             }
         }
@@ -76,7 +83,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Screen(viewModel: NewsViewModel, innerPadding: PaddingValues) {
+fun Screen(viewModel: NewsViewModel, innerPadding: PaddingValues, dbViewModel: DbViewModel) {
     val newsResult by viewModel.news.collectAsState()
     var city by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
@@ -99,7 +106,8 @@ fun Screen(viewModel: NewsViewModel, innerPadding: PaddingValues) {
                 value = city,
                 onValueChange = { city = it },
                 label = { Text("Search for any Location") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                singleLine = true
             )
             IconButton(onClick = {
                 viewModel.getListOfNewsByCountry(city)
@@ -121,7 +129,10 @@ fun Screen(viewModel: NewsViewModel, innerPadding: PaddingValues) {
                 }
                 is NetworkResponse.Success<*> -> {
                     isLoading = false
-                    NewsScreen((newsResult as NetworkResponse.Success).data.articles)
+                    NewsScreen(
+                        (newsResult as NetworkResponse.Success).data.articles,
+                        dbViewModel = dbViewModel
+                    )
                 }
             }
         Spacer(modifier = Modifier.height(16.dp))
@@ -193,7 +204,7 @@ fun Screen(viewModel: NewsViewModel, innerPadding: PaddingValues) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewsScreen(articles: List<Article>) {
+fun NewsScreen(articles: List<Article>, dbViewModel: DbViewModel) {
     // A Scaffold provides the basic Material Design layout structure
     Scaffold(
         topBar = {
@@ -213,7 +224,7 @@ fun NewsScreen(articles: List<Article>) {
                 // You can show a loading indicator or an empty state message here
                 // For now, we'll just assume the list is passed in
             } else {
-                ArticleList(articles = articles)
+                ArticleList(articles = articles, dbViewModel)
             }
         }
     }
@@ -223,13 +234,13 @@ fun NewsScreen(articles: List<Article>) {
  * Displays a scrollable list of articles using LazyColumn for performance.
  */
 @Composable
-fun ArticleList(articles: List<Article>) {
+fun ArticleList(articles: List<Article>, dbViewModel: DbViewModel) {
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(articles) { article ->
-            ArticleItem(article = article)
+            ArticleItem(article = article, dbViewModel)
         }
     }
 }
@@ -239,7 +250,20 @@ fun ArticleList(articles: List<Article>) {
  * It uses an ElevatedCard with rounded corners for a clean, Material 3 look.
  */
 @Composable
-fun ArticleItem(article: Article) {
+fun ArticleItem(article: Article, dbViewModel: DbViewModel) {
+    val context = LocalContext.current
+    var isFavorite by remember { mutableStateOf(false) }
+
+
+    val imageLoader = ImageLoader.Builder(context)
+        .diskCachePolicy(policy = CachePolicy.ENABLED)
+        .memoryCachePolicy(policy = CachePolicy.ENABLED)
+        .memoryCache {
+            MemoryCache.Builder(context)
+                .maxSizePercent(0.25)
+                .build()
+        }
+
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp), // Rounded corners
@@ -250,17 +274,38 @@ fun ArticleItem(article: Article) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(article.image)
+//                    .memoryCachePolicy(policy = CachePolicy.ENABLED)
+//                    .diskCachePolicy(policy = CachePolicy.ENABLED)
                     .crossfade(true)
                     .build(),
                 //placeholder = painterResource(R.drawable.placeholder), // Your placeholder drawable
                 //error = painterResource(R.drawable.placeholder),       // Your error drawable
                 contentDescription = "Image for article: ${article.title}",
                 contentScale = ContentScale.Crop,
+//                imageLoader = imageLoader
+//                    .memoryCachePolicy(policy = CachePolicy.ENABLED)
+//                    .memoryCache {
+//                        MemoryCache
+//                            .Builder(context)
+//                            .maxSizePercent(0.1)
+//                            .strongReferencesEnabled(enable = true)
+//                            .build()
+//                    }
+//                    .diskCachePolicy(policy = CachePolicy.ENABLED)
+//                    .diskCache {
+//                        DiskCache.Builder()
+//                            .maxSizePercent(0.1)
+//                            .build()
+//                            //.cleanupDispatcher(dispatcher = Dispatchers.IO)
+//                    }
+//                    .logger(DebugLogger())
+//                    .build(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)) // Match top corners
             )
+
 
             // Content section with padding
             Column(modifier = Modifier.padding(16.dp)) {
@@ -294,12 +339,31 @@ fun ArticleItem(article: Article) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                Row(modifier = Modifier
+                    .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = article.publishedAt, // You might want to format this date
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                    IconButton(
+                        onClick = {
+                            isFavorite = !isFavorite
+                            dbViewModel.saveNews(article)
+                        }
+                    ) {
+                        Icon(
+                            //imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
+                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
+                            //imageVector = Icons.Outlined.Favorite,
+                            contentDescription = if (isFavorite) "Remove from Favorites" else "Add to favorites",
+                            tint = if (isFavorite) Color.Red else LocalContentColor.current
+                        )
+                    }
+                }
                 // Published Date
-                Text(
-                    text = article.publishedAt, // You might want to format this date
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
             }
         }
     }
