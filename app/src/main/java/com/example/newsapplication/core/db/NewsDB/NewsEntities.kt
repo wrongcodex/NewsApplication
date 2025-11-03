@@ -16,7 +16,7 @@ data class NewsEntities (
     val image: String,
     val lang: String,
     val publishedAt: String,
-    //val source: Source,
+    val source: String,
     val title: String,
     val url: String
 )

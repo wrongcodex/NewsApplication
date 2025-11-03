@@ -1,10 +1,9 @@
 package com.example.newsapplication.core.repositories.binds
 
-import com.example.newsapplication.core.repositories.impl.NewsRepositoryImpl
-import com.example.newsapplication.core.repositories.repos.NewsRepository
+import com.example.newsapplication.core.repositories.impl.DatabaseRepositoryImpl
+import com.example.newsapplication.core.repositories.repos.DatabaseRepository
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 
@@ -12,5 +11,5 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 abstract class BindDatabaseRepository {
     @Binds
-    abstract fun bindsDatabaseRepository(newsRepositoryImpl: NewsRepositoryImpl): NewsRepository
+    abstract fun bindsDatabaseRepository(databaseRepositoryImpl: DatabaseRepositoryImpl): DatabaseRepository
 }

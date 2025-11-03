@@ -51,15 +51,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.example.newsapplication.core.apis.newsApi.NetworkResponse
+import com.example.newsapplication.core.db.NewsDB.NewsEntities
 import com.example.newsapplication.core.models.newsModel.Article
 import com.example.newsapplication.core.viewmodels.DbViewModel
 import com.example.newsapplication.core.viewmodels.NewsViewModel
+import com.example.newsapplication.ui.presentation.components.SingleArticleComponent
 import com.example.newsapplication.ui.theme.NewsApplicationTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -85,6 +88,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Screen(viewModel: NewsViewModel, innerPadding: PaddingValues, dbViewModel: DbViewModel) {
     val newsResult by viewModel.news.collectAsState()
+    val articlees by dbViewModel.articlees.collectAsStateWithLifecycle()
     var city by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
@@ -214,7 +218,6 @@ fun NewsScreen(articles: List<Article>, dbViewModel: DbViewModel) {
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary
                 ),
-
             )
         }
     ) { innerPadding ->
@@ -223,6 +226,7 @@ fun NewsScreen(articles: List<Article>, dbViewModel: DbViewModel) {
             if (articles.isEmpty()) {
                 // You can show a loading indicator or an empty state message here
                 // For now, we'll just assume the list is passed in
+                Text("No Article Yet")
             } else {
                 ArticleList(articles = articles, dbViewModel)
             }
@@ -240,131 +244,30 @@ fun ArticleList(articles: List<Article>, dbViewModel: DbViewModel) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(articles) { article ->
-            ArticleItem(article = article, dbViewModel)
-        }
-    }
-}
-
-/**
- * A modern, attractive composable for displaying a single news article.
- * It uses an ElevatedCard with rounded corners for a clean, Material 3 look.
- */
-@Composable
-fun ArticleItem(article: Article, dbViewModel: DbViewModel) {
-    val context = LocalContext.current
-    var isFavorite by remember { mutableStateOf(false) }
-
-
-    val imageLoader = ImageLoader.Builder(context)
-        .diskCachePolicy(policy = CachePolicy.ENABLED)
-        .memoryCachePolicy(policy = CachePolicy.ENABLED)
-        .memoryCache {
-            MemoryCache.Builder(context)
-                .maxSizePercent(0.25)
-                .build()
-        }
-
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp), // Rounded corners
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-    ) {
-        Column {
-            // Image loading with Coil
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(article.image)
-//                    .memoryCachePolicy(policy = CachePolicy.ENABLED)
-//                    .diskCachePolicy(policy = CachePolicy.ENABLED)
-                    .crossfade(true)
-                    .build(),
-                //placeholder = painterResource(R.drawable.placeholder), // Your placeholder drawable
-                //error = painterResource(R.drawable.placeholder),       // Your error drawable
-                contentDescription = "Image for article: ${article.title}",
-                contentScale = ContentScale.Crop,
-//                imageLoader = imageLoader
-//                    .memoryCachePolicy(policy = CachePolicy.ENABLED)
-//                    .memoryCache {
-//                        MemoryCache
-//                            .Builder(context)
-//                            .maxSizePercent(0.1)
-//                            .strongReferencesEnabled(enable = true)
-//                            .build()
-//                    }
-//                    .diskCachePolicy(policy = CachePolicy.ENABLED)
-//                    .diskCache {
-//                        DiskCache.Builder()
-//                            .maxSizePercent(0.1)
-//                            .build()
-//                            //.cleanupDispatcher(dispatcher = Dispatchers.IO)
-//                    }
-//                    .logger(DebugLogger())
-//                    .build(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)) // Match top corners
+//            ArticleItem(article = article, dbViewModel)
+            SingleArticleComponent(
+                modifier = Modifier.padding(16.dp),
+                article.image,
+                article.title,
+                article.source.name,
+                article.description,
+                article.publishedAt,
+                onFavClick = {isFav->
+                    if (isFav)
+                        dbViewModel.saveNews(article)
+                    else
+                        dbViewModel.deleteNewsById(article)
+                },
             )
-
-
-            // Content section with padding
-            Column(modifier = Modifier.padding(16.dp)) {
-                // Source Name
-                Text(
-                    text = article.source.name,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Article Title
-                Text(
-                    text = article.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Article Description
-                Text(
-                    text = article.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(modifier = Modifier
-                    .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = article.publishedAt, // You might want to format this date
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                    IconButton(
-                        onClick = {
-                            isFavorite = !isFavorite
-                            dbViewModel.saveNews(article)
-                        }
-                    ) {
-                        Icon(
-                            //imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
-                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
-                            //imageVector = Icons.Outlined.Favorite,
-                            contentDescription = if (isFavorite) "Remove from Favorites" else "Add to favorites",
-                            tint = if (isFavorite) Color.Red else LocalContentColor.current
-                        )
-                    }
-                }
-                // Published Date
-            }
         }
     }
 }
+
+//@Composable
+//fun ArticleItem(article: Article, dbViewModel: DbViewModel) {
+//    val context = LocalContext.current
+//    var isFavorite by remember { mutableStateOf(false) }
+//
+//    SingleArticleComponent(Modifier, article, onFavClick = ) { }
+//
+//}
