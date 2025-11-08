@@ -40,26 +40,13 @@ fun SingleArticleComponent (
     articleSource: String,
     articleDescription: String,
     articlePublishedAt: String,
+    //isFavorite: Boolean,
+    //onFavClick: () -> Unit,
     onFavClick: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     var isFavorite by remember { mutableStateOf(false) }
 
-
-//    val imageLoader = ImageLoader.Builder(context)
-//        .diskCachePolicy(policy = CachePolicy.ENABLED)
-//        .memoryCachePolicy(policy = CachePolicy.ENABLED)
-//        .memoryCache {
-//            MemoryCache.Builder(context)
-//                .maxSizePercent(0.25)
-//                .build()
-//        }
-//        .diskCache(
-//            diskCache = DiskCache
-//                .Builder()
-//                .directory(context.cacheDir.resolve("image_cache"))
-//                .build()
-//        )
     ElevatedCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp), // Rounded corners
@@ -119,47 +106,19 @@ fun SingleArticleComponent (
                     )
                     IconButton(
                         onClick = {
+                            //onFavClick()
+//                            isFavorite = !isFavorite
                             onFavClick(isFavorite)
-                            isFavorite = !isFavorite
                         }
                     ) {
                         Icon(
-                            //imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
                             imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
-                            //imageVector = Icons.Outlined.Favorite,
                             contentDescription = if (isFavorite) "Remove from Favorites" else "Add to favorites",
                             tint = if (isFavorite) Color.Red else LocalContentColor.current
                         )
                     }
                 }
-                // Published Date
             }
         }
     }
 }
-
-
-//@Preview (showBackground = true, showSystemUi = true)
-//@Composable
-//fun PreviewSingleArticle(){
-//    val sampleArticle = NewsEntities(
-//        // You can leave roomId as default since it's auto-generated
-//        content = "This is the full content of the article. It can be a longer piece of text to see how it wraps and fits within the component design.",
-//        description = "This is a sample description for a news article to be displayed in the preview.",
-//        id = "sample-id-123",
-//        image = "https://example.com/image.jpg", // You can use a placeholder URL
-//        lang = "en",
-//        publishedAt = "2025-11-27T10:00:00Z",
-//        source = "Sample News Source",
-//        title = "This is a Sample Article Title",
-//        url = "https://example.com/sample-article"
-//    )
-//    SingleArticleComponent(
-//        modifier = Modifier,
-//        newsEntities = sampleArticle,
-//        onFavClick = {},
-//        onArticleClick = {}
-//    ) {
-//
-//    }
-//}

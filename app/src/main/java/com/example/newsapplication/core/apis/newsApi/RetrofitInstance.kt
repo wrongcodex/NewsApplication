@@ -19,6 +19,9 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object RetrofitInstance {
     private const val base_url = "https://gnews.io/api/v4/"
+    //private const val base_url2 = "https://gnews.io/api/v4/"
+
+    //@Server1
     @Singleton
     @Provides
     fun getNewsResponse(): Retrofit{
@@ -27,12 +30,29 @@ object RetrofitInstance {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
-
+    //@Server2
     @Singleton
     @Provides
-    fun providesNewsService(retrofit: Retrofit): NewsApiService{
+    fun providesNewsService( retrofit: Retrofit): NewsApiService{
         return retrofit.create(NewsApiService::class.java)
     }
+
+//    @Server2
+//    @Singleton
+//    @Provides
+//    fun getNewsResponse2(): Retrofit{
+//        return Retrofit.Builder()
+//            .baseUrl(base_url2)
+//            .addConverterFactory(GsonConverterFactory.create())
+//            .build()
+//    }
+//
+//    @Server2
+//    @Singleton
+//    @Provides
+//    fun providesNewsService2(@Server2 retrofit: Retrofit): NewsApiService{
+//        return retrofit.create(NewsApiService::class.java)
+//    }
 
     @Singleton
     @Provides

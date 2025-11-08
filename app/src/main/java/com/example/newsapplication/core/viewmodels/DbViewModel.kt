@@ -73,7 +73,8 @@ class DbViewModel @Inject constructor(
                 publishedAt = article.publishedAt,
                 title = article.title,
                 source = article.source.name,
-                url = article.url
+                url = article.url,
+                isFav = false
             )
             databaseRepository.saveArticleById(newsEntity)
         }
@@ -89,7 +90,8 @@ class DbViewModel @Inject constructor(
                 publishedAt = article.publishedAt,
                 title = article.title,
                 source = article.source.name,
-                url = article.url
+                url = article.url,
+                isFav = false
             )
             databaseRepository.deleteArticleById(newsEntity)
         }

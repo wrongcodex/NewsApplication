@@ -22,6 +22,10 @@ interface NewsDAO{
     @Query("DELETE FROM news_table")
     suspend fun deleteAll()
 
+    //Query toggle fav
+//    @Query("SELECT * FROM news_table WHERE")
+//    suspend fun deleteAll()
+
     @Query("SELECT * FROM news_table")
     fun selectAllArticles(): Flow<List<NewsEntities>>
 }

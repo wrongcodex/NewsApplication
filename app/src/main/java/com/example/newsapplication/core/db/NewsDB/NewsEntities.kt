@@ -18,5 +18,6 @@ data class NewsEntities (
     val publishedAt: String,
     val source: String,
     val title: String,
-    val url: String
+    val url: String,
+    val isFav: Boolean
 )

@@ -83,4 +83,7 @@ dependencies {
     // Room
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)
+
+    //Datastore
+    //implementation(libs.datastore)
 }
