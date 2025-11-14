@@ -11,21 +11,22 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NewsDAO{
-    @Upsert
-    suspend fun insertArticleInDatabase(newsEntities: NewsEntities)
+//    @Upsert
+//    suspend fun insertArticleInDatabase(newsEntities: NewsEntities)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSingleArticle(newsEntities: NewsEntities)
 
     @Delete
     suspend fun deleteArticle(newsEntities: NewsEntities)
-    @Query("DELETE FROM news_table")
-    suspend fun deleteAll()
+
+//    @Query("DELETE FROM news_table")
+//    suspend fun deleteAll()
 
     //Query toggle fav
 //    @Query("SELECT * FROM news_table WHERE")
 //    suspend fun deleteAll()
 
-    @Query("SELECT * FROM news_table")
-    fun selectAllArticles(): Flow<List<NewsEntities>>
+    @Query("SELECT * FROM news_table ORDER BY id DESC")
+    fun getAllArticles(): Flow<List<NewsEntities>>
 }

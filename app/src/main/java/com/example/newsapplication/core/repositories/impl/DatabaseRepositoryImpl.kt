@@ -11,7 +11,7 @@ class DatabaseRepositoryImpl @Inject constructor(
     private val newsDAO: NewsDAO
 ): DatabaseRepository {
     override suspend fun getAllArticles(): Flow<List<NewsEntities>> {
-        return newsDAO.selectAllArticles()
+        return newsDAO.getAllArticles()
     }
 
     override suspend fun saveArticleById(newsEntities: NewsEntities) {

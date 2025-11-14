@@ -1,8 +1,12 @@
 package com.example.newsapplication.ui.theme
 
+import androidx.annotation.ColorRes
+import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
@@ -32,3 +36,16 @@ val Typography = Typography(
     )
     */
 )
+
+fun myTitleStyle(
+    @ColorRes color: Color,
+    fontSize: Int,
+    fontWeight: FontWeight
+): TextStyle{
+    return TextStyle(
+        color = color,
+        fontSize = fontSize.sp,
+        fontWeight = FontWeight.Normal
+    )
+}
+

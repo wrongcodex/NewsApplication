@@ -1,5 +1,6 @@
 package com.example.newsapplication.ui.presentation.components
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.newsapplication.core.models.newsModel.Article
 
 @Composable
 fun SingleArticleComponent (
@@ -40,13 +42,11 @@ fun SingleArticleComponent (
     articleSource: String,
     articleDescription: String,
     articlePublishedAt: String,
-    //isFavorite: Boolean,
-    //onFavClick: () -> Unit,
-    onFavClick: (Boolean) -> Unit,
+    isFavorite: Boolean,
+    onFavClick: () -> Unit,
+//    onFavClick: (Article) -> Unit,
+    //onFavClick: (Boolean) -> Unit,
 ) {
-    val context = LocalContext.current
-    var isFavorite by remember { mutableStateOf(false) }
-
     ElevatedCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp), // Rounded corners
@@ -106,9 +106,8 @@ fun SingleArticleComponent (
                     )
                     IconButton(
                         onClick = {
-                            //onFavClick()
-//                            isFavorite = !isFavorite
-                            onFavClick(isFavorite)
+                            onFavClick()
+                            Log.d("abcbd", "Value of Fav in Article List2: ${isFavorite} ")
                         }
                     ) {
                         Icon(

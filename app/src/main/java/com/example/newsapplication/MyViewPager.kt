@@ -18,13 +18,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.newsapplication.core.viewmodels.DbViewModel
 import com.example.newsapplication.core.viewmodels.NewsViewModel
-import com.example.newsapplication.core.viewmodels.PermissionsViewModel
 
 @Composable
 fun MyViewPager(
     modifier: Modifier = Modifier,
     newsViewModele: NewsViewModel,
-    DbViewModele: DbViewModel
+    dbViewModele: DbViewModel
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val pagerState = rememberPagerState(
@@ -49,11 +48,10 @@ fun MyViewPager(
             when (currentPage){
                 0 ->{
 //                    Screen1(modifier, currentPage.toString())
-                    Screen(newsViewModele, dbViewModel = DbViewModele)
+                    Screen(newsViewModele, dbViewModel = dbViewModele)
                 }
                 1 ->{
-                    val permissionViewModel: PermissionsViewModel by lazy { PermissionsViewModel() }
-                    Screen2(modifier, permissionViewModel)
+                    Screen2(modifier, dbViewModele = dbViewModele)
                 }
                 2 ->{
                     //Screen1(modifier, currentPage.toString())
@@ -105,9 +103,3 @@ fun MyViewPager(
 //    }
 //}
 
-
-@Preview
-@Composable
-private fun MyViewPagerPreview() {
-    //MyViewPager(modifier = Modifier)
-}

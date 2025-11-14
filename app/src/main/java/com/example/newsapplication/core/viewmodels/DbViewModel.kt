@@ -20,48 +20,15 @@ import kotlin.String
 class DbViewModel @Inject constructor(
     private val databaseRepository: DatabaseRepository
 ): ViewModel() {
-    private val _articlees = MutableStateFlow<List<NewsEntities>>(emptyList())
-    val articlees: StateFlow<List<NewsEntities>> = _articlees
+    private val _favorites = MutableStateFlow<List<NewsEntities>>(emptyList())
+    val favorites: StateFlow<List<NewsEntities>> = _favorites
 
     fun getAllNews(){
         viewModelScope.launch {
-            databaseRepository.getAllArticles().collect { listOfArticles ->
-                _articlees.value = listOfArticles
-            }
+            databaseRepository.getAllArticles().collect (_favorites)
         }
     }
-//    fun saveNews(newsEntities: NewsEntities){
-//        viewModelScope.launch {
-//            val data = NewsEntities(
-//                content = newsEntities.content,
-//                description = newsEntities.description,
-//                id = newsEntities.id,
-//                image = newsEntities.image,
-//                lang = newsEntities.lang,
-//                publishedAt = newsEntities.publishedAt,
-//                source = newsEntities.source,
-//                title = newsEntities.title,
-//                url = newsEntities.url
-//            )
-//            databaseRepository.saveArticleById(data)
-//        }
-//    }
-//    fun deleteNewsById(newsEntities: NewsEntities){
-//        viewModelScope.launch {
-//            databaseRepository.deleteArticleById(newsEntities)
-//        }
-//    }
 
-    private val _artilces = MutableStateFlow<List<Article>>(emptyList())
-    val artilces : SharedFlow<List<Article>> = _artilces
-
-    //    fun getAllNews(): List<Article>{
-//        viewModelScope.launch {
-//            _dbNews.value = databaseRepository.getAllArticles()
-//        }
-//        //return
-//        return _dbNews.value
-//    }
     fun saveNews(article: Article){
         viewModelScope.launch {
             val newsEntity = NewsEntities(
