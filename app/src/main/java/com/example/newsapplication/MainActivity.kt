@@ -2,6 +2,8 @@ package com.example.newsapplication
 
 import android.Manifest
 import android.app.AlertDialog
+import android.app.ComponentCaller
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -10,13 +12,20 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.AttributeSet
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.content.MediaType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.TaskStackBuilder
 import androidx.core.content.ContextCompat
 import com.example.newsapplication.core.apis.newsApi.NetworkResponse
 import com.example.newsapplication.core.db.NewsDB.NewsEntities
@@ -69,6 +79,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    lateinit var imagePickerLauncher: ActivityResultLauncher<PickVisualMediaRequest>
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val REQUEST_NOTIFICATION_PERMISSION = Manifest.permission.POST_NOTIFICATIONS
     private val REQUEST_NOTIFICATION_CODE: Int = 100
@@ -117,15 +128,30 @@ class MainActivity : ComponentActivity() {
                 dialog.dismiss()
             }.show()
     }
-
     private val viewModel by viewModels<NewsViewModel>()
     private val dbViewModel by viewModels<DbViewModel>()
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        imagePickerLauncher =  registerForActivityResult(ActivityResultContracts.PickVisualMedia()){uri->
+            Log.d("293749280420-42", "onCreate: uri:$uri")
+        }
+
+        //adding cancel intent
+        val cancelActionIntent = Intent(this, MainApplication::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
+        }
+        val cancelPendingIntent : PendingIntent = PendingIntent.getActivity(this, 0, cancelActionIntent,
+            PendingIntent.FLAG_IMMUTABLE)
+
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent: PendingIntent? = TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(intent)
+            getPendingIntent(0,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+
         enableEdgeToEdge()
         setContent {
-
             val myChannerID = "1"
 
             val builder = NotificationCompat.Builder(this, myChannerID)
@@ -135,16 +161,7 @@ class MainActivity : ComponentActivity() {
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                 .setOngoing(true)
-                //.addAction()
-
-            //adding cancel intent
-
-            val cancelActionIntent = Intent(this, MainApplication::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
-            }
-            val calcelPendingIntent : PendingIntent = PendingIntent.getActivity(this, 0, cancelActionIntent,
-                PendingIntent.FLAG_IMMUTABLE)
-
+                .addAction(R.drawable.ic_launcher_background, "Dismiss", pendingIntent)
 
 
             //adding cancel intent
@@ -162,7 +179,26 @@ class MainActivity : ComponentActivity() {
                         ){
                         Spacer(modifier = Modifier.height(36.dp))
                         Button(onClick = {
-                            (requestRuntimeNotificationPermission(this@MainActivity))
+                            imagePickerLauncher.launch(PickVisualMediaRequest.Builder().build())
+//                            val notificationINtent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+//                                data = Uri.fromParts("package", packageName, null)
+//                            }
+//                            startActivity(notificationINtent)
+
+
+
+//                                else{
+//                                    isCanceled = true
+//                                    notify(0, builder.build())
+//                                }
+//                            }
+                        }) {
+//                            Text(text = "Notification")
+                            Text(text = if (isCanceled) "Hide Notification" else "Show Notification")
+                        }
+                        // button 2
+                        Spacer(modifier = Modifier.height(36.dp))
+                        Button(onClick = {
                             NotificationManagerCompat.from(this@MainActivity).apply {
                                 if (isCanceled){
                                     cancel(0)
@@ -173,8 +209,8 @@ class MainActivity : ComponentActivity() {
                                     notify(0, builder.build())
                                 }
                             }
+                           // builder.build()
                         }) {
-//                            Text(text = "Notification")
                             Text(text = if (isCanceled) "Hide Notification" else "Show Notification")
                         }
                     }
@@ -187,6 +223,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 }
 
 @Composable
@@ -198,6 +235,9 @@ fun Screen(viewModel: NewsViewModel, dbViewModel: DbViewModel) {
     var isLoading by remember { mutableStateOf(false) }
     val favoriteArticles = dbViewModel.favorites.collectAsState()
 
+//    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) {
+//
+//    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
