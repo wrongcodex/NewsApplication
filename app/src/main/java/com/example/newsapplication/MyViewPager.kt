@@ -1,5 +1,6 @@
 package com.example.newsapplication
 
+import android.app.PendingIntent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -23,7 +24,8 @@ import com.example.newsapplication.core.viewmodels.NewsViewModel
 fun MyViewPager(
     modifier: Modifier = Modifier,
     newsViewModele: NewsViewModel,
-    dbViewModele: DbViewModel
+    dbViewModele: DbViewModel,
+    pendingIntent: PendingIntent?
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val pagerState = rememberPagerState(
@@ -48,7 +50,7 @@ fun MyViewPager(
             when (currentPage){
                 0 ->{
 //                    Screen1(modifier, currentPage.toString())
-                    Screen(newsViewModele, dbViewModel = dbViewModele)
+                    Screen(newsViewModele, dbViewModel = dbViewModele, pendingIntent)
                 }
                 1 ->{
                     Screen2(modifier, dbViewModele = dbViewModele)

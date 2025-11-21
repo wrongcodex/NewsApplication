@@ -86,4 +86,7 @@ dependencies {
 
     //Datastore
     //implementation(libs.datastore)
+
+    //worker
+    implementation(libs.worker)
 }

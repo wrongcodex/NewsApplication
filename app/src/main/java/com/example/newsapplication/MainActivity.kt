@@ -3,6 +3,7 @@ package com.example.newsapplication
 import android.Manifest
 import android.app.AlertDialog
 import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -51,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -60,6 +62,8 @@ import androidx.core.content.ContextCompat
 import com.example.newsapplication.core.apis.newsApi.NetworkResponse
 import com.example.newsapplication.core.db.NewsDB.NewsEntities
 import com.example.newsapplication.core.models.newsModel.Article
+import com.example.newsapplication.core.utils.notifications.NotificationUtils.Companion.browserPendingIntentWithUri
+import com.example.newsapplication.core.utils.notifications.NotificationUtils.Companion.launchNotification
 import com.example.newsapplication.core.viewmodels.DbViewModel
 import com.example.newsapplication.core.viewmodels.NewsViewModel
 import com.example.newsapplication.ui.presentation.components.SingleArticleComponent
@@ -126,33 +130,34 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
 
-            val myChannerID = "1"
-
-            val builder = NotificationCompat.Builder(this, myChannerID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("FIELD MARSHAL ASIM MUNIR")
-                .setContentText("I AM VERY HAPPY TO SHOW THAT I AM FIELD MARSHAL ASIM MUNIR AT PAKISTAN ARMY")
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                .setOngoing(true)
-                //.addAction()
-
-            //adding cancel intent
-
-            val cancelActionIntent = Intent(this, MainApplication::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
+            val cancelIntent = Intent(this, MainActivity::class.java)
+            val cancelPendingIntent: PendingIntent? = TaskStackBuilder.create(this).run {
+                addNextIntentWithParentStack(cancelIntent)
+                getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             }
-            val calcelPendingIntent : PendingIntent = PendingIntent.getActivity(this, 0, cancelActionIntent,
-                PendingIntent.FLAG_IMMUTABLE)
 
 
+
+            val myChannerID = "1"
+            
+//            val builder = NotificationCompat.Builder(this, myChannerID)
+//                .setSmallIcon(R.drawable.ic_launcher_foreground)
+//                .setContentTitle("FIELD MARSHAL ASIM MUNIR")
+//                .setContentText("I AM VERY HAPPY TO SHOW THAT I AM FIELD MARSHAL ASIM MUNIR AT PAKISTAN ARMY")
+//                .setPriority(NotificationCompat.PRIORITY_MAX)
+//                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+//                .setOngoing(true)
+//                .addAction(R.drawable.ic_launcher_background, "Open App", cancelPendingIntent)
 
             //adding cancel intent
-//            val ACTION_CANCLE = "cancle"
-//            val snoozeIntent = Intent(this, MainActivity::class.java).apply {
-//                action = ACTION_CANCLE
-//                putExtra(EXTRA_NOTIFICATION_ID, 0)
+
+//            val cancelActionIntent = Intent(this, MainApplication::class.java).apply {
+//                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
 //            }
+//            val cancelPendingIntent : PendingIntent = PendingIntent.getActivity(this, 0, cancelActionIntent,
+//                PendingIntent.FLAG_IMMUTABLE)
+
+
 
             var isCanceled by remember { mutableStateOf(false) }
             NewsApplicationTheme {
@@ -161,28 +166,38 @@ class MainActivity : ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally
                         ){
                         Spacer(modifier = Modifier.height(36.dp))
-                        Button(onClick = {
-                            (requestRuntimeNotificationPermission(this@MainActivity))
-                            NotificationManagerCompat.from(this@MainActivity).apply {
-                                if (isCanceled){
-                                    cancel(0)
-                                    isCanceled = false
-                                }
-                                else{
-                                    isCanceled = true
-                                    notify(0, builder.build())
-                                }
-                            }
-                        }) {
-//                            Text(text = "Notification")
-                            Text(text = if (isCanceled) "Hide Notification" else "Show Notification")
-                        }
+//                        Button(onClick = {
+//                            (requestRuntimeNotificationPermission(this@MainActivity))
+////                            NotificationManagerCompat.from(this@MainActivity).apply {
+////                                if (isCanceled){
+////                                    cancel(0)
+////                                    isCanceled = false
+////                                }
+////                                else{
+////                                    isCanceled = true
+////                                    notify(0, builder.build())
+////                                }
+////                            }
+//                            launchNotification(this@MainActivity, "1", "New Message", "www.gomovies.com", cancelPendingIntent)
+////                            if (isCanceled){
+////                                cancel(0)
+////                                isCanceled = false
+////                            }
+////                            else{
+////                                isCanceled = true
+////                                notify(0, builder.build())
+////                            }
+//                        }) {
+//
+//                            Text(text = if (isCanceled) "Hide Notification" else "Show Notification")
+//                        }
                     }
-//                    MyViewPager(
-//                        modifier = Modifier.padding(top = 36.dp),
-//                        newsViewModele = viewModel,
-//                        dbViewModele = dbViewModel
-//                    )
+                    MyViewPager(
+                        modifier = Modifier.padding(top = 36.dp),
+                        newsViewModele = viewModel,
+                        dbViewModele = dbViewModel,
+                        pendingIntent = cancelPendingIntent
+                    )
                 }
             }
         }
@@ -191,7 +206,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 //fun Screen(viewModel: NewsViewModel, innerPadding: PaddingValues, dbViewModel: DbViewModel) {
-fun Screen(viewModel: NewsViewModel, dbViewModel: DbViewModel) {
+fun Screen(viewModel: NewsViewModel, dbViewModel: DbViewModel, pendingIntent: PendingIntent?) {
     val newsResult by viewModel.news.collectAsState()
     //val articlees by dbViewModel.articlees.collectAsStateWithLifecycle()
     var city by remember { mutableStateOf("") }
@@ -243,7 +258,8 @@ fun Screen(viewModel: NewsViewModel, dbViewModel: DbViewModel) {
                     ShowNews(
                         (newsResult as NetworkResponse.Success).data.articles,
                         dbViewModel = dbViewModel,
-                        favoriteArticles.value
+                        favoriteArticles.value,
+                        pendingIntent = pendingIntent
                     )
                 }
             }
@@ -256,7 +272,8 @@ fun Screen(viewModel: NewsViewModel, dbViewModel: DbViewModel) {
 fun ShowNews(
     articles: List<Article>,
     dbViewModel: DbViewModel,
-    favoriteArticles: List<NewsEntities>
+    favoriteArticles: List<NewsEntities>,
+    pendingIntent: PendingIntent?
 ) {
     // A Scaffold provides the basic Material Design layout structure
     Scaffold(
@@ -279,7 +296,7 @@ fun ShowNews(
                 // For now, we'll just assume the list is passed in
                 Text("No Article Yet")
             } else {
-                ArticleList(articles = articles, dbViewModel, favoriteArticles)
+                ArticleList(articles = articles, dbViewModel, favoriteArticles, pendingIntent = pendingIntent)
             }
         }
     }
@@ -292,11 +309,14 @@ fun ShowNews(
 fun ArticleList(
     articles: List<Article>,
     dbViewModel: DbViewModel,
-    favoriteArticles: List<NewsEntities>
+    favoriteArticles: List<NewsEntities>,
+    pendingIntent: PendingIntent?
+//    cancelPendingIntent: PendingIntent?
 ) {
     //val isFav by remember { mutableStateOf(false) }
     //val favoriteArticles by dbViewModel.articlees.collectAsStateWithLifecycle()
     val isFavorite by remember { mutableStateOf(false) }
+    val context: Context = LocalContext.current
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -315,6 +335,7 @@ fun ArticleList(
                     !isFav
                     dbViewModel.saveNews(article)
                     Log.d("abcbd", "ArticleList Value of Fav in Article List2: ${isFav} ")
+                    launchNotification(context, "1", "New Message", "www.gomovies.com", browserPendingIntentWithUri(context,article.image))
                 },
             )
         }

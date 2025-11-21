@@ -3,6 +3,7 @@ package com.example.newsapplication
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import androidx.activity.ComponentActivity
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp

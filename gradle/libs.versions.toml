@@ -15,6 +15,7 @@ okHttpVersion = "5.2.1"
 coilVersion = "2.7.0"
 room_version = "2.8.3"
 dataStoreVer = "1.1.7"
+worker = "2.11.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -53,6 +54,8 @@ room-compiler = {group = "androidx.room", name = "room-compiler", version.ref = 
 
 #Pref-DataStore
 #datastore = {group = "androidx.datastore", name = "datastore-preferences", version.ref = "dataStoreVer"}
+
+worker = {group = "androidx.work", name = "work-runtime-ktx", version.ref = "worker"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

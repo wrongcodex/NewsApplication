@@ -83,7 +83,6 @@ fun Screen2(modifier: Modifier = Modifier, dbViewModele: DbViewModel,) {
                 Text(text = "Notification")
             }
         }
-
     }
 }
 
